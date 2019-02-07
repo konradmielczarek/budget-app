@@ -268,6 +268,19 @@ var budgetController = (function() {
     },
 
 
+    getExpenseCategory: function(id) {
+      var category;
+
+      data.allItems.exp.forEach(function(el) {
+        if (el.id === id) {
+          category = el.category;
+        }
+      });
+
+      return category;
+    },
+
+
     testing: function() {
       console.log(data);
     }
@@ -540,7 +553,7 @@ var UIController = (function() {
           newHtml = html.replace('%id%', el.id);
           newHtml = newHtml.replace('%description%', el.description);
           newHtml = newHtml.replace('%value%', formatNumber(el.value, 'exp'));
-          console.log(el);
+
           if (el.percentage < 1) {
             newHtml = newHtml.replace('%percentage%%', '--');
           } else {
@@ -665,9 +678,6 @@ var controller = (function(budgetCtrl, UICtrl) {
       // 2. Add the item to the budget controller
       newItem = budgetCtrl.addItem(input.type, input.category, input.description, input.value);
       budgetCtrl.testing();
-      console.log(newItem);
-      console.log(input.type);
-      console.log(input.category);
 
       // 3. Add the item to the input tab UI
       UICtrl.addListItem(newItem, input.type, input.category);
@@ -689,7 +699,7 @@ var controller = (function(budgetCtrl, UICtrl) {
 
   var ctrlDeleteItem = function(e) {
     if (e.target.classList.contains('ion-ios-close-outline')) {
-      var itemId, splitId, type, id;
+      var itemId, splitId, type, id, category;
 
       itemId = e.target.parentNode.parentNode.parentNode.parentNode.id;
 
@@ -697,8 +707,6 @@ var controller = (function(budgetCtrl, UICtrl) {
         splitId = itemId.split('-');
         type = splitId[0];
         id = parseInt(splitId[1]);
-
-        console.log(itemId);
 
         // 1. Delete the item from the data structure
         budgetCtrl.deleteItem(type, id);
@@ -712,8 +720,11 @@ var controller = (function(budgetCtrl, UICtrl) {
         // 4. Calculate and update percentages
         updatePercentages();
 
-        // 5. Calculate category totals
-        calculateCategoryTotals(input.category);
+        // 5. Get item's category if it's an expense
+        category = budgetCtrl.getExpenseCategory(id);
+
+        // 6. Calculate category totals
+        calculateCategoryTotals(category);
       }
     }
   }
