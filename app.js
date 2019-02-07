@@ -548,6 +548,7 @@ var UIController = (function() {
         oneCatExpenses.forEach(function(el) {
           if (cat === 'all') {
             html = distinguishCategories(el.category);
+            html = html.replace('<div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div>', '');
           }
 
           newHtml = html.replace('%id%', el.id);
