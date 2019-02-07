@@ -347,7 +347,7 @@ var UIController = (function() {
     var html;
     
     // Add proper css class and tippy content to item depending on category
-    html = '<div class="item item--' + category + ' clearfix tippy" id="inc-%id%" data-tippy-content="' + formatCategoryString(category) + '"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__percentage">%percentage%%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
+    html = '<div class="item item--' + category + ' clearfix tippy" id="exp-%id%" data-tippy-content="' + formatCategoryString(category) + '"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__percentage">%percentage%%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
 
     // Customize tippy tooltips
     tippy('.expenses__list', {
@@ -665,6 +665,9 @@ var controller = (function(budgetCtrl, UICtrl) {
       // 2. Add the item to the budget controller
       newItem = budgetCtrl.addItem(input.type, input.category, input.description, input.value);
       budgetCtrl.testing();
+      console.log(newItem);
+      console.log(input.type);
+      console.log(input.category);
 
       // 3. Add the item to the input tab UI
       UICtrl.addListItem(newItem, input.type, input.category);
