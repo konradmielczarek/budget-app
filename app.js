@@ -9,6 +9,7 @@ var budgetController = (function() {
     this.percentage = -1;
   };
 
+
   Expense.prototype.calcPercentage = function(totalIncome) {
     if (totalIncome > 0) {
       this.percentage = Math.round((this.value / totalIncome) * 100);
@@ -17,13 +18,16 @@ var budgetController = (function() {
     }
   }
 
+
   Expense.prototype.getPercentage = function() {
     return this.percentage;
   }
 
+
   Expense.prototype.filterExpenses = function(cat) {
     if (this.category === cat) return this.category;
   }
+
 
   var Income = function(id, description, value) {
     this.id = id;
@@ -31,6 +35,7 @@ var budgetController = (function() {
     this.value = value;
   };
   
+
   var data = {
     allItems: {
       exp: [],
@@ -42,10 +47,40 @@ var budgetController = (function() {
     },
     budget: 0,
     percentage: -1,
-    other: {
-      categories: ['housing', 'utilities', 'food-and-groceries', 'health-care', 'holidays', 'entertainment']
-    }
+    categories: [
+      {
+        name: 'housing',
+        totalExp: 0,
+        percentage: 0
+      },
+      {
+        name: 'utilities',
+        totalExp: 0,
+        percentage: 0
+      },
+      {
+        name: 'food-and-groceries',
+        totalExp: 0,
+        percentage: 0
+      },
+      {
+        name: 'health-care',
+        totalExp: 0,
+        percentage: 0
+      },
+      {
+        name: 'holidays',
+        totalExp: 0,
+        percentage: 0
+      },
+      {
+        name: 'entertainment',
+        totalExp: 0,
+        percentage: 0
+      },
+    ]
   };
+
 
   var calculateTotal = function(type) {
     var sum = 0;
@@ -56,6 +91,7 @@ var budgetController = (function() {
 
     data.totals[type] = sum;
   }
+
 
   var filterExpenses = function(cat) {
     var expenses;
@@ -75,6 +111,55 @@ var budgetController = (function() {
       return filteredExpenses;
     }
   }
+
+
+  var calculateTotalCategoryExpenses = function(cat) {
+    var sum = 0;
+
+    data.allItems.exp.forEach(function(el) {
+      if (el.category === cat) {
+        sum += el.value;
+      }
+    });
+
+    data.categories.forEach(function(el) {
+      if (el.name === cat) {
+        el.totalExp = sum;
+      }
+    });
+
+    if (cat === 'all') {
+      return data.totals.exp;
+    } else {
+      return sum;
+    }
+  }
+
+
+  var calculateCategoryPercentage = function(cat) {
+    var percentage = 0;
+
+    // Gather percentages of particular expenses within category
+    data.allItems.exp.forEach(function(el) {
+      if (el.category === cat) {
+        percentage += el.percentage;
+      }
+    });
+
+    // Set percentage for specific category
+    data.categories.forEach(function(el) {
+      if (el.name === cat) {
+        el.percentage = percentage;
+      }
+    });
+
+    if (cat === 'all') {
+      return data.percentage;
+    } else {
+      return percentage;
+    }
+  }
+
 
   return {
     addItem: function(type, cat, desc, val) {
@@ -101,6 +186,7 @@ var budgetController = (function() {
       return newItem;
     },
 
+
     deleteItem: function(type, id) {
       var ids, index;
 
@@ -114,6 +200,7 @@ var budgetController = (function() {
         data.allItems[type].splice(index, 1);
       }
     },
+
 
     calculateBudget: function() {
       // calculate total income and expenses
@@ -131,11 +218,13 @@ var budgetController = (function() {
       }
     },
 
+
     calculatePercentages: function() {
       data.allItems.exp.forEach(function(el) {
         el.calcPercentage(data.totals.inc);
       });
     },
+
 
     getPercentages: function() {
       var allPercentages = data.allItems.exp.map(function(el) {
@@ -144,6 +233,7 @@ var budgetController = (function() {
 
       return allPercentages; 
     },
+
 
     getBudget: function() {
       return {
@@ -154,36 +244,29 @@ var budgetController = (function() {
       }
     },
 
+
     getCategories: function() {
-      return data.other.categories.sort();
+      // Get categories names
+      var categories = data.categories.map(function(el) {
+        return el.name;
+      });
+
+      return categories.sort();
     },
+
 
     getFilteredExpenses: function(cat) {
       return filterExpenses(cat);
     },
 
-    calculateSumOfExpenses: function(cat) {
-      var filteredExpenses, totalPercentage;
-      var sum = 0;
-      var percSum = 0;
 
-      filteredExpenses = filterExpenses(cat);
-
-      filteredExpenses.forEach(function(el) {
-        sum += el.value;
-        percSum += el.percentage;
-      });
-
-      // Retrieve total percentage of expenses to display for 'All' filters in summary
-      totalPercentage = data.percentage;
-
-      console.log(sum);
+    getCategoryTotals: function(cat) {
       return {
-        total: sum,
-        categoryPercentage: percSum,
-        percentage: totalPercentage
-      };
+        totalExpenses: calculateTotalCategoryExpenses(cat),
+        totalCategoryPercentage: calculateCategoryPercentage(cat),
+      }
     },
+
 
     testing: function() {
       console.log(data);
@@ -467,20 +550,16 @@ var UIController = (function() {
           list += newHtml + ' ';
         });
 
-        if (sum.percentage < 0 || sum.categoryPercentage < 0) {
-          sum.percentage, sum.categoryPercentage = '--';
+        if (sum.allItemsPercentage < 0 || sum.totalCategoryPercentage < 0) {
+          sum.allItemsPercentage, sum.totalCategoryPercentage = '--';
         } 
 
         // Add html of TOTAL record
         sumHtml = '<div class="item item--summary clearfix" id="total"><div class="item__description">TOTAL</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__percentage">--</div></div></div>';
 
-        newSumHtml = sumHtml.replace('%value%', formatNumber(sum.total, 'exp'));
+        newSumHtml = sumHtml.replace('%value%', formatNumber(sum.totalExpenses, 'exp'));
 
-        if (cat === 'all') {
-          newSumHtml = newSumHtml.replace('>--', '>' + sum.percentage + '%');
-        } else {
-          newSumHtml = newSumHtml.replace('>--', '>' + sum.categoryPercentage + '%');
-        }
+        newSumHtml = newSumHtml.replace('>--', '>' + sum.totalCategoryPercentage + '%');
         
         // Add TOTAL html to html list
         list += newSumHtml;
@@ -533,6 +612,7 @@ var controller = (function(budgetCtrl, UICtrl) {
     DOM.refreshBtn.addEventListener('click', displayExpensesByCategories);
   };
 
+
   var populateCategories = function() {
     var categories;
     // Get DOM strings from UI controller
@@ -546,6 +626,7 @@ var controller = (function(budgetCtrl, UICtrl) {
     UICtrl.displayCategories(categories, DOM.selectCategory);
   }
 
+
   var updateBudget = function() {
     // 1. Calculate the budget
     budgetCtrl.calculateBudget();
@@ -557,6 +638,7 @@ var controller = (function(budgetCtrl, UICtrl) {
     UICtrl.displayBudget(budget);
   }
 
+
   var updatePercentages = function() {
     // 1. Calculate percentages
     budgetCtrl.calculatePercentages();
@@ -567,6 +649,11 @@ var controller = (function(budgetCtrl, UICtrl) {
     // 3. Update the UI with the new percentages
     UICtrl.displayPercentages(percentages);
   }
+
+  var calculateCategoryTotals = function(cat) {
+    budgetCtrl.getCategoryTotals(cat);
+  }
+
 
   var ctrlAddItem = function() {
     var input, newItem;
@@ -590,8 +677,12 @@ var controller = (function(budgetCtrl, UICtrl) {
 
       // 6. Calculate and update percentages
       updatePercentages();
+
+      // 7. Calculate category totals
+      calculateCategoryTotals(input.category);
     }
   }
+
 
   var ctrlDeleteItem = function(e) {
     if (e.target.classList.contains('ion-ios-close-outline')) {
@@ -604,6 +695,8 @@ var controller = (function(budgetCtrl, UICtrl) {
         type = splitId[0];
         id = parseInt(splitId[1]);
 
+        console.log(itemId);
+
         // 1. Delete the item from the data structure
         budgetCtrl.deleteItem(type, id);
 
@@ -615,33 +708,39 @@ var controller = (function(budgetCtrl, UICtrl) {
 
         // 4. Calculate and update percentages
         updatePercentages();
+
+        // 5. Calculate category totals
+        calculateCategoryTotals(input.category);
       }
     }
   }
 
+
   var displayExpensesByCategories = function() {
-    var selectedCat, filteredExpenses, addedExpenses, sumOfCategoryExpenses;
+    var selectedCat, filteredExpenses, addedExpenses, categoryTotals;
     
     // 1. Get selected category from UI controller
     selectedCat = UICtrl.getSelectedCategory();
 
-    // 2. Change heading in Summary view in UI controller
+    // 2. Change header in Summary view in UI controller
     UICtrl.changeSummaryHeader(selectedCat);
     
     // 3. Get filtered expenses from Budget Controller
     filteredExpenses = budgetCtrl.getFilteredExpenses(selectedCat);
 
-    // 4. Calculate sum of expenses for specific category
-    sumOfCategoryExpenses = budgetCtrl.calculateSumOfExpenses(selectedCat);
+    // 4. Get total expenses and percentage for specific category
+    categoryTotals = budgetCtrl.getCategoryTotals(selectedCat);
+    console.log(categoryTotals);
     
     // 5. Add expenses to UI (they're not displayed yet)
-    addedExpenses = UICtrl.addFilteredExpensesToUI(selectedCat, filteredExpenses, sumOfCategoryExpenses);
+    addedExpenses = UICtrl.addFilteredExpensesToUI(selectedCat, filteredExpenses, categoryTotals);
 
     // 6. Display filtered expenses in UI
     if (addedExpenses) {
       UICtrl.displayFilteredExpenses(addedExpenses);
     }
   }
+
 
   return {
     init: function() {
