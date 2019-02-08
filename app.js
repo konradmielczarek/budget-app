@@ -79,8 +79,6 @@ var budgetController = (function() {
 
     expenses = data.allItems.exp;
 
-    console.log(expenses);
-
     if (cat === 'all') {
       return expenses;
     } else {
@@ -88,7 +86,6 @@ var budgetController = (function() {
         if (el.category === cat) return el;
       });
 
-      console.log(filteredExpenses);
       return filteredExpenses;
     }
   }
@@ -363,6 +360,7 @@ var UIController = (function() {
     return (type === 'exp' ? '-' : '+') + ' ' + int + '.' + dec;
   }
 
+
   var formatCategoryString = function(catString) {
     var string;
 
@@ -372,11 +370,13 @@ var UIController = (function() {
     return string;
   }
 
+
   var nodeListForEach = function(list, callback) {
     for (var i = 0; i < list.length; i++) {
       callback(list[i], i);
     }
   };
+
 
   var distinguishCategories = function(category) {
     var html;
@@ -393,6 +393,7 @@ var UIController = (function() {
     return html;
   }
 
+
   var getItemHtml = function(type) {
     var html;
 
@@ -405,6 +406,7 @@ var UIController = (function() {
     return html;
   }
 
+
   return {
     getInput: function() {
       return {
@@ -414,6 +416,7 @@ var UIController = (function() {
         value: parseFloat(DOMstrings.inputValue.value)
       }
     },
+
 
     displayCategories: function(categoriesArr, element) {
       var option;
@@ -425,6 +428,7 @@ var UIController = (function() {
         element.appendChild(option);
       });
     },
+
 
     addListItem: function(obj, type, category) {
       // Create HTML string with placeholder text
@@ -449,11 +453,13 @@ var UIController = (function() {
       element.insertAdjacentHTML('beforeend', newHtml);
     },
 
+
     deleteListItem: function(selectorId) {
       var el = document.getElementById(selectorId);
 
       el.parentNode.removeChild(el);
     },
+
 
     displayItems: function(appData) {
       var income, expenses, html, newHtml, list, incomeList, expensesList;
@@ -487,6 +493,7 @@ var UIController = (function() {
       expensesList.innerHTML = list;
     },
 
+
     clearFields: function() {
       var fields, fieldsArr;
 
@@ -499,6 +506,7 @@ var UIController = (function() {
 
       fieldsArr[0].focus();
     },
+
 
     displayBudget: function(obj) {
       var type;
@@ -515,6 +523,7 @@ var UIController = (function() {
       }
     },
 
+
     displayPercentages: function(percentages) {
       var fields = document.querySelectorAll(DOMstrings.expensesPercentageLabel);
 
@@ -526,6 +535,7 @@ var UIController = (function() {
         }
       });
     },
+
 
     displayMonth: function() {
       var now, year, month;
@@ -540,6 +550,7 @@ var UIController = (function() {
       document.querySelector(DOMstrings.dateLabel).textContent = months[month] + ' ' + year;
     },
 
+
     changedType: function() {
       var fields = document.querySelectorAll('.add__type, .add__category, .add__description, .add__value');
 
@@ -550,6 +561,7 @@ var UIController = (function() {
       DOMstrings.inputBtn.classList.toggle('red');
     },
 
+
     hideCategories: function() {
       if (DOMstrings.inputType.value === 'exp') {
         DOMstrings.inputCategory.style.display = 'inline-block';
@@ -557,6 +569,7 @@ var UIController = (function() {
         DOMstrings.inputCategory.style.display = 'none';
       }
     },
+
 
     changeTab: function(e) {
       if (e.target.classList.contains('view__type')) {
@@ -580,9 +593,11 @@ var UIController = (function() {
       }
     },
 
+
     getSelectedCategory: function() {
         return DOMstrings.selectCategory.value;
     },
+
 
     changeSummaryHeader: function (cat) {
       var expTitle;
@@ -590,6 +605,7 @@ var UIController = (function() {
       expTitle = DOMstrings.expensesTitle;
       expTitle.textContent = formatCategoryString(cat) + ' expenses';
     },
+
 
     addFilteredExpensesToUI: function(cat, arr, sum) {
       var element, list, html, newHtml, oneCatExpenses, sumHtml, newSumHtml;
@@ -648,12 +664,14 @@ var UIController = (function() {
       }
     },
 
+
     displayFilteredExpenses: function(list) {
       var element;
 
       element = DOMstrings.expensesSummaryContainer;
       element.innerHTML = list;
     },
+
 
     getDOMstrings: function() {
       return DOMstrings;
@@ -829,7 +847,6 @@ var controller = (function(budgetCtrl, UICtrl) {
 
     // 4. Get total expenses and percentage for specific category
     categoryTotals = budgetCtrl.getCategoryTotals(selectedCat);
-    console.log(categoryTotals);
     
     // 5. Add expenses to UI (they're not displayed yet)
     addedExpenses = UICtrl.addFilteredExpensesToUI(selectedCat, filteredExpenses, categoryTotals);
