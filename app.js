@@ -10,25 +10,6 @@ var budgetController = (function() {
   };
 
 
-  Expense.prototype.calcPercentage = function(totalIncome) {
-    if (totalIncome > 0) {
-      this.percentage = Math.round((this.value / totalIncome) * 100);
-    } else {
-      this.percentage = -1;
-    }
-  }
-
-
-  Expense.prototype.getPercentage = function() {
-    return this.percentage;
-  }
-
-
-  Expense.prototype.filterExpenses = function(cat) {
-    if (this.category === cat) return this.category;
-  }
-
-
   var Income = function(id, description, value) {
     this.id = id;
     this.description = description;
@@ -104,7 +85,7 @@ var budgetController = (function() {
       return expenses;
     } else {
       var filteredExpenses = expenses.filter(function(el) {
-        return el.filterExpenses(cat);
+        if (el.category === cat) return el;
       });
 
       console.log(filteredExpenses);
@@ -116,22 +97,31 @@ var budgetController = (function() {
   var calculateTotalCategoryExpenses = function(cat) {
     var sum = 0;
 
-    data.allItems.exp.forEach(function(el) {
-      if (el.category === cat) {
-        sum += el.value;
-      }
-    });
+    if (cat || cat === undefined) {
+      if (data.allItems.exp.length === 0) {
+        // If not, set all categories totalExp to 0
+        data.categories.forEach(function(el) {
+          el.totalExp = 0;
+        });
+      } else {
+        data.allItems.exp.forEach(function(el) {
+          if (el.category === cat) {
+            sum += el.value;
+          }
+        });
 
-    data.categories.forEach(function(el) {
-      if (el.name === cat) {
-        el.totalExp = sum;
-      }
-    });
+        data.categories.forEach(function(el) {
+          if (el.name === cat) {
+            el.totalExp = sum;
+          }
+        });
 
-    if (cat === 'all') {
-      return data.totals.exp;
-    } else {
-      return sum;
+        if (cat === 'all') {
+          return data.totals.exp;
+        } else {
+          return sum;
+        }
+      }
     }
   }
 
@@ -139,24 +129,33 @@ var budgetController = (function() {
   var calculateCategoryPercentage = function(cat) {
     var percentage = 0;
 
-    // Gather percentages of particular expenses within category
-    data.allItems.exp.forEach(function(el) {
-      if (el.category === cat) {
-        percentage += el.percentage;
-      }
-    });
+    if (cat || cat === undefined) {
+      if (data.allItems.exp.length === 0) {
+        // If not, set all categories percentages to 0
+        data.categories.forEach(function(el) {
+          el.percentage = 0;
+        });
+      } else {
+        // Gather percentages of particular expenses within category
+        data.allItems.exp.forEach(function(el) {
+          if (el.category === cat) {
+            percentage += el.percentage;
+          }
+        });
 
-    // Set percentage for specific category
-    data.categories.forEach(function(el) {
-      if (el.name === cat) {
-        el.percentage = percentage;
-      }
-    });
+        // Set percentage for specific category
+        data.categories.forEach(function(el) {
+          if (el.name === cat) {
+            el.percentage = percentage;
+          }
+        });
 
-    if (cat === 'all') {
-      return data.percentage;
-    } else {
-      return percentage;
+        if (cat === 'all') {
+          return data.percentage;
+        } else {
+          return percentage;
+        }
+      }
     }
   }
 
@@ -220,15 +219,21 @@ var budgetController = (function() {
 
 
     calculatePercentages: function() {
+      var totalIncome = data.totals.inc;
+
       data.allItems.exp.forEach(function(el) {
-        el.calcPercentage(data.totals.inc);
+        if (totalIncome > 0) {
+          el.percentage = Math.round((el.value / totalIncome) * 100);
+        } else {
+          el.percentage = -1;
+        }
       });
     },
 
 
     getPercentages: function() {
       var allPercentages = data.allItems.exp.map(function(el) {
-        return el.getPercentage();
+        return el.percentage;
       });
 
       return allPercentages; 
@@ -278,6 +283,23 @@ var budgetController = (function() {
       });
 
       return category;
+    },
+
+
+    saveDataToLocalStorage: function() {
+      localStorage.setItem('data', JSON.stringify(data));
+    },
+
+
+    getDataFromLocalStorage: function() {
+      var appData = localStorage.getItem('data');
+
+      return JSON.parse(appData);
+    },
+
+
+    setDataFromLocalStorage: function(appData) {
+      data = appData;
     },
 
 
@@ -371,6 +393,18 @@ var UIController = (function() {
     return html;
   }
 
+  var getItemHtml = function(type) {
+    var html;
+
+    if (type === 'inc') {
+      html = '<div class="item clearfix" id="inc-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
+    } else if (type === 'exp') {
+      html = '<div class="item clearfix" id="exp-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
+    }
+
+    return html;
+  }
+
   return {
     getInput: function() {
       return {
@@ -398,10 +432,10 @@ var UIController = (function() {
       
       if (type === 'inc') {
         element = DOMstrings.incomeContainer;
-        html = '<div class="item clearfix" id="inc-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
+        html = getItemHtml('inc');
       } else if (type === 'exp') {
         element = DOMstrings.expensesContainer;
-        html = '<div class="item clearfix" id="exp-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
+        html = getItemHtml('exp');
 
         html = distinguishCategories(category);
       }
@@ -419,6 +453,38 @@ var UIController = (function() {
       var el = document.getElementById(selectorId);
 
       el.parentNode.removeChild(el);
+    },
+
+    displayItems: function(appData) {
+      var income, expenses, html, newHtml, list, incomeList, expensesList;
+
+      list = '';
+      income = appData.inc;
+      expenses = appData.exp;
+
+      incomeList = DOMstrings.incomeContainer;
+      expensesList = DOMstrings.expensesContainer;
+
+      income.forEach(function(el) {
+        html = getItemHtml('inc');
+        newHtml = html.replace('%id%', el.id);
+        newHtml = newHtml.replace('%description%', el.description);
+        newHtml = newHtml.replace('%value%', formatNumber(el.value, 'inc'));
+        list += newHtml + ' ';
+      });
+
+      incomeList.innerHTML = list;
+      list = '';
+
+      expenses.forEach(function(el) {
+        html = distinguishCategories(el.category);
+        newHtml = html.replace('%id%', el.id);
+        newHtml = newHtml.replace('%description%', el.description);
+        newHtml = newHtml.replace('%value%', formatNumber(el.value, 'exp'));
+        list += newHtml + ' ';
+      });
+
+      expensesList.innerHTML = list;
     },
 
     clearFields: function() {
@@ -694,6 +760,9 @@ var controller = (function(budgetCtrl, UICtrl) {
 
       // 7. Calculate category totals
       calculateCategoryTotals(input.category);
+
+      // 8. Save app data to local storage
+      budgetCtrl.saveDataToLocalStorage();
     }
   }
 
@@ -726,8 +795,23 @@ var controller = (function(budgetCtrl, UICtrl) {
 
         // 6. Calculate category totals
         calculateCategoryTotals(category);
+
+        // 7. Save app data to local storage
+        budgetCtrl.saveDataToLocalStorage();
       }
     }
+  }
+
+
+  var displayItems = function(appData) {
+    // 1. Display all items retrieved from stored data
+    UICtrl.displayItems(appData.allItems);
+
+    // 2. Calculate and update percentages
+    updatePercentages();
+
+    // 3. Calculate category totals
+    calculateCategoryTotals();
   }
 
 
@@ -760,16 +844,20 @@ var controller = (function(budgetCtrl, UICtrl) {
   return {
     init: function() {
       console.log('App has started');
+      var appData = budgetCtrl.getDataFromLocalStorage();
+      budgetCtrl.setDataFromLocalStorage(appData);
       populateCategories();
       UICtrl.displayMonth();
       UICtrl.displayBudget(
         {
-          budget: 0,
-          totalIncome: 0,
-          totalExpenses: 0,
-          percentage: -1
+          budget: appData.budget,
+          totalIncome: appData.totals.inc,
+          totalExpenses: appData.totals.exp,
+          percentage: appData.percentage
         }
       );
+      displayItems(appData);
+      budgetCtrl.testing();
       setupEventListeners();
     }
   }
