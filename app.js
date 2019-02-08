@@ -79,8 +79,6 @@ var budgetController = (function() {
 
     expenses = data.allItems.exp;
 
-    console.log(expenses);
-
     if (cat === 'all') {
       return expenses;
     } else {
@@ -88,7 +86,6 @@ var budgetController = (function() {
         if (el.category === cat) return el;
       });
 
-      console.log(filteredExpenses);
       return filteredExpenses;
     }
   }
@@ -674,7 +671,7 @@ var UIController = (function() {
       element = DOMstrings.expensesSummaryContainer;
       element.innerHTML = list;
     },
-    
+
 
     getDOMstrings: function() {
       return DOMstrings;
@@ -850,7 +847,6 @@ var controller = (function(budgetCtrl, UICtrl) {
 
     // 4. Get total expenses and percentage for specific category
     categoryTotals = budgetCtrl.getCategoryTotals(selectedCat);
-    console.log(categoryTotals);
     
     // 5. Add expenses to UI (they're not displayed yet)
     addedExpenses = UICtrl.addFilteredExpensesToUI(selectedCat, filteredExpenses, categoryTotals);
