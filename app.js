@@ -844,19 +844,34 @@ var controller = (function(budgetCtrl, UICtrl) {
   return {
     init: function() {
       console.log('App has started');
-      var appData = budgetCtrl.getDataFromLocalStorage();
-      budgetCtrl.setDataFromLocalStorage(appData);
       populateCategories();
       UICtrl.displayMonth();
-      UICtrl.displayBudget(
-        {
-          budget: appData.budget,
-          totalIncome: appData.totals.inc,
-          totalExpenses: appData.totals.exp,
-          percentage: appData.percentage
-        }
-      );
-      displayItems(appData);
+
+      var appData = budgetCtrl.getDataFromLocalStorage();
+
+      if (appData) {
+        budgetCtrl.setDataFromLocalStorage(appData);
+        UICtrl.displayBudget(
+          {
+            budget: appData.budget,
+            totalIncome: appData.totals.inc,
+            totalExpenses: appData.totals.exp,
+            percentage: appData.percentage
+          }
+        );
+
+        displayItems(appData);
+      } else {
+        UICtrl.displayBudget(
+          {
+            budget: 0,
+            totalIncome: 0,
+            totalExpenses: 0,
+            percentage: 0
+          }
+        );
+      }
+      
       budgetCtrl.testing();
       setupEventListeners();
     }
